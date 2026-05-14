@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moon Atölye — El Sanatları</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script>
+    const FB = {
+      apiKey: "AIzaSyAC7K3VxLqVpcBz0ntyFre_gNDv87qpjr8",
+      authDomain: "moonatolye.firebaseapp.com",
+      databaseURL: "https://moonatolye-default-rtdb.firebaseio.com",
+      projectId: "moonatolye",
+      storageBucket: "moonatolye.firebasestorage.app",
+      messagingSenderId: "1030953792059",
+      appId: "1:1030953792059:web:ec99a4dc4793ab5efde21e"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(FB);
+    window.db = firebase.database();
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #faf8f5; --surface: #ffffff;
+      --text: #1c1410; --text-muted: #8b7355;
+      --accent: #c4622d; --accent-2: #9a6b1a;
+      --accent-light: #f0e8d8;
+      --border: #e8e0d0; --border-dark: #d4c8b8;
+      --radius: 3px; --radius-lg: 8px;
+      --shadow-md: 0 4px 24px rgba(28,20,10,.10);
+      --shadow-lg: 0 12px 48px rgba(28,20,10,.14);
+      --font-head: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font-body); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+    .site-header { position: sticky; top: 0; z-index: 100; background: rgba(250,248,245,.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 48px; height: 72px; display: flex; align-items: center; }
+    .site-logo { font-family: var(--font-head); font-size: 26px; font-weight: 300; letter-spacing: .08em; color: var(--text); text-decoration: none; display: flex; align-items: baseline; gap: 6px; }
+    .site-logo em { font-style: italic; color: var(--accent); }
+    .site-logo span { font-size: 11px; letter-spacing: .25em; color: var(--text-muted); text-transform: uppercase; font-family: var(--font-body); margin-left: 4px; }
+    .hero { padding: 80px 48px 64px; max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+    .hero-text h1 { font-family: var(--font-head); font-size: clamp(48px,5vw,72px); font-weight: 300; line-height: 1.1; }
+    .hero-text h1 em { font-style: italic; color: var(--accent); }
+    .hero-text p { margin-top: 20px; font-size: 16px; line-height: 1.7; color: var(--text-muted); max-width: 420px; }
+    .hero-visual { height: 340px; border-radius: var(--radius-lg); background: var(--accent-light); overflow: hidden; }
+    .hero-pattern { width: 100%; height: 100%; background-image: repeating-linear-gradient(45deg,transparent,transparent 12px,rgba(196,98,45,.06) 12px,rgba(196,98,45,.06) 24px),repeating-linear-gradient(-45deg,transparent,transparent 12px,rgba(154,107,26,.04) 12px,rgba(154,107,26,.04) 24px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+    .hero-pattern-label { font-family: var(--font-head); font-size: 22px; font-style: italic; color: var(--accent); opacity: .6; }
+    .hero-pattern-sub { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--text-muted); opacity: .7; }
+    .filter-bar { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--surface); padding: 0 48px; display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 56px; }
+    .filter-cats { display: flex; align-items: center; gap: 8px; overflow-x: auto; flex: 1; scrollbar-width: none; }
+    .filter-cats::-webkit-scrollbar { display: none; }
+    .cat-pill { flex-shrink: 0; padding: 6px 16px; border-radius: 100px; font-size: 13px; cursor: pointer; border: 1px solid var(--border-dark); background: transparent; color: var(--text-muted); transition: all .18s; white-space: nowrap; }
+    .cat-pill:hover { border-color: var(--accent); color: var(--accent); }
+    .cat-pill.active { background: var(--accent); border-color: var(--accent); color: white; }
+    .filter-sort select { font-family: var(--font-body); font-size: 13px; border: 1px solid var(--border-dark); border-radius: var(--radius); padding: 6px 32px 6px 12px; background: var(--surface); color: var(--text); cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b7355'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+    .filter-sort select:focus { outline: none; border-color: var(--accent); }
+    .shop-section { max-width: 1280px; margin: 0 auto; padding: 48px 48px 80px; }
+    .product-count { font-size: 13px; color: var(--text-muted); margin-bottom: 32px; }
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap: 28px; }
+    .p-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; cursor: pointer; transition: transform .22s, box-shadow .22s; }
+    .p-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+    .p-card-img { aspect-ratio: 4/3; overflow: hidden; background: var(--accent-light); }
+    .p-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+    .p-card:hover .p-card-img img { transform: scale(1.04); }
+    .p-card-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+    .p-card-body { padding: 20px 22px 22px; }
+    .p-card-cat { font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 8px; }
+    .p-card-name { font-family: var(--font-head); font-size: 22px; font-weight: 400; line-height: 1.2; margin-bottom: 10px; }
+    .p-card-price { font-size: 18px; font-weight: 500; color: var(--accent); }
+    .p-card-action { margin-top: 14px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 6px; transition: color .18s; }
+    .p-card:hover .p-card-action { color: var(--accent); }
+    .empty-state { grid-column: 1/-1; text-align: center; padding: 80px 0; color: var(--text-muted); }
+    .empty-state h3 { font-family: var(--font-head); font-size: 28px; font-weight: 300; margin-bottom: 12px; font-style: italic; }
+    .modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(28,20,10,.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px; animation: fadeIn .2s ease; }
+    @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+    .modal-box { background: var(--surface); border-radius: var(--radius-lg); width: 100%; max-width: 1000px; height: 88vh; max-height: 700px; overflow: hidden; display: grid; grid-template-columns: 1fr 1fr; box-shadow: var(--shadow-lg); animation: slideUp .25s ease; position: relative; }
+    @keyframes slideUp { from { transform:translateY(20px);opacity:0 } to { transform:none;opacity:1 } }
+    .modal-gallery { background: var(--accent-light); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .modal-main-img { flex: 1; overflow: hidden; position: relative; }
+    .modal-main-img img { width: 100%; height: 100%; object-fit: cover; }
+    .modal-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.85); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--text); z-index: 5; transition: background .15s; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+    .modal-arrow:hover { background: white; }
+    .modal-arrow-prev { left: 10px; }
+    .modal-arrow-next { right: 10px; }
+    .modal-thumbs { display: flex; gap: 6px; padding: 10px; overflow-x: auto; background: rgba(0,0,0,.04); scrollbar-width: none; flex-shrink: 0; }
+    .modal-thumbs::-webkit-scrollbar { display: none; }
+    .modal-thumb { flex-shrink: 0; width: 52px; height: 52px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: border-color .15s; }
+    .modal-thumb.active { border-color: var(--accent); }
+    .modal-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .modal-details { display: flex; flex-direction: column; overflow: hidden; }
+    .modal-details-scroll { padding: 36px 32px 20px; overflow-y: auto; flex: 1; }
+    .modal-details-action { padding: 14px 32px 20px; border-top: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+    .modal-close { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border-dark); background: rgba(255,255,255,.92); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-muted); transition: all .15s; z-index: 10; }
+    .modal-close:hover { border-color: var(--accent); color: var(--accent); }
+    .modal-cat { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 12px; }
+    .modal-name { font-family: var(--font-head); font-size: 32px; font-weight: 300; line-height: 1.15; margin-bottom: 14px; }
+    .modal-price { font-size: 26px; font-weight: 500; color: var(--accent); margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .modal-desc { font-size: 14px; line-height: 1.75; color: var(--text-muted); white-space: pre-wrap; }
+    .btn-whatsapp { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 28px; border-radius: var(--radius); background: #25d366; color: white; border: none; cursor: pointer; font-family: var(--font-body); font-size: 15px; font-weight: 500; letter-spacing: .03em; transition: background .18s; text-decoration: none; width: 100%; }
+    .btn-whatsapp:hover { background: #1ebc5a; }
+    .site-footer { border-top: 1px solid var(--border); padding: 32px 48px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--text-muted); }
+    .site-footer strong { font-family: var(--font-head); font-size: 16px; font-weight: 300; font-style: italic; color: var(--text); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+    .loading-wrap { min-height: 60vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
+    .loading-wrap p { color: var(--text-muted); font-size: 14px; }
+    @media (max-width: 768px) {
+      .site-header { padding: 0 20px; }
+      .hero { grid-template-columns: 1fr; padding: 40px 20px; }
+      .hero-visual { height: 220px; }
+      .filter-bar { padding: 0 20px; }
+      .shop-section { padding: 32px 20px 60px; }
+      .product-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+      .modal-overlay { padding: 0; align-items: flex-end; }
+      .modal-box { grid-template-columns: 1fr; grid-template-rows: 52vw 1fr; height: 92vh; max-height: 92vh; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+      .modal-gallery { max-height: 52vw; }
+      .modal-details-scroll { padding: 16px 18px 12px; }
+      .modal-details-action { padding: 10px 18px 16px; }
+      .modal-name { font-size: 22px; margin-bottom: 8px; }
+      .modal-price { font-size: 20px; margin-bottom: 14px; padding-bottom: 14px; }
+      .modal-desc { font-size: 13px; }
+      .btn-whatsapp { font-size: 14px; padding: 13px; }
+      .site-footer { padding: 24px 20px; flex-direction: column; gap: 8px; text-align: center; }
+    }
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const h = React.createElement;
+const { useState, useEffect } = React;
+
+const phColors = ['#d4956a','#8b9e6b','#6b8bae','#9e7b6b','#7b6bae','#ae8b6b'];
+const phColor = (id) => phColors[Math.abs(parseInt((id||'0').replace(/\D/g,'').slice(-3)||'0')) % phColors.length];
+
+function PhImg({ id, name }) {
+  const col = phColor(id);
+  return h('div', {
+    className: 'p-card-placeholder',
+    style: { background: `linear-gradient(135deg,${col}22,${col}44)`, backgroundImage: `repeating-linear-gradient(45deg,transparent,transparent 16px,${col}18 16px,${col}18 32px)` }
+  },
+    h('svg', { width:28, height:28, viewBox:'0 0 24 24', fill:'none', stroke:col, strokeWidth:'1.2', opacity:'0.7' },
+      h('path', { d:'M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z' }),
+      h('polyline', { points:'9 22 9 12 15 12 15 22' })
+    ),
+    h('span', { style:{ fontSize:10, color:col, opacity:.8, textAlign:'center', padding:'0 8px', lineHeight:1.3, fontFamily:'monospace' } }, name)
+  );
+}
+
+function ProductModal({ product, categories, whatsapp, onClose }) {
+  const [idx, setIdx] = useState(0);
+  const cat = categories.find(c => c.id === product.categoryId);
+  const hasImg = product.images && product.images.length > 0;
+  const imgs = product.images || [];
+
+  useEffect(() => {
+    const fn = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', fn);
+    return () => window.removeEventListener('keydown', fn);
+  }, [onClose]);
+
+  const msg = encodeURIComponent(`Merhaba, "${product.name}" ürününüz hakkında bilgi almak istiyorum.`);
+  const waUrl = `https://wa.me/${whatsapp}?text=${msg}`;
+
+  return h('div', { className:'modal-overlay', onClick: e => { if (e.target === e.currentTarget) onClose(); } },
+    h('div', { className:'modal-box' },
+      h('button', { className:'modal-close', onClick:onClose }, '×'),
+      h('div', { className:'modal-gallery' },
+        h('div', { className:'modal-main-img' },
+          hasImg
+            ? h('img', { src:imgs[idx], alt:product.name })
+            : h(PhImg, { id:product.id, name:product.name }),
+          hasImg && imgs.length > 1 && idx > 0 && h('button', {
+            className:'modal-arrow modal-arrow-prev',
+            onClick: e => { e.stopPropagation(); setIdx(i => i - 1); }
+          }, '‹'),
+          hasImg && imgs.length > 1 && idx < imgs.length - 1 && h('button', {
+            className:'modal-arrow modal-arrow-next',
+            onClick: e => { e.stopPropagation(); setIdx(i => i + 1); }
+          }, '›')
+        ),
+        hasImg && imgs.length > 1 && h('div', { className:'modal-thumbs' },
+          ...imgs.map((img,i) => h('div', { key:i, className:`modal-thumb${i===idx?' active':''}`, onClick:()=>setIdx(i) },
+            h('img', { src:img, alt:'' })
+          ))
+        )
+      ),
+      h('div', { className:'modal-details' },
+        h('div', { className:'modal-details-scroll' },
+          cat && h('div', { className:'modal-cat' }, cat.name),
+          h('h2', { className:'modal-name' }, product.name),
+          h('div', { className:'modal-price' }, Number(product.price).toLocaleString('tr-TR') + ' ₺'),
+          product.description && h('p', { className:'modal-desc' }, product.description)
+        ),
+        h('div', { className:'modal-details-action' },
+          h('a', { className:'btn-whatsapp', href:waUrl, target:'_blank', rel:'noopener noreferrer' },
+            h('svg', { viewBox:'0 0 24 24', style:{width:20,height:20,fill:'white',flexShrink:0} },
+              h('path', { d:'M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z' })
+            ),
+            'Bilgi Al — WhatsApp'
+          )
+        )
+      )
+    )
+  );
+}
+
+function App() {
+  const lsGet = (k,d) => { try { return JSON.parse(localStorage.getItem(k))??d; } catch { return d; } };
+  const lsSet = (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); } catch {} };
+
+  const [cats, setCats]         = useState(() => lsGet('mc_cats',[]));
+  const [prods, setProds]       = useState(() => lsGet('mc_prods',[]));
+  const [settings, setSettings] = useState(() => lsGet('mc_cfg',{ whatsapp:'905050029773' }));
+  const [ready, setReady]       = useState(() => lsGet('mc_cats',[]).length > 0);
+  const [activeCat, setActiveCat] = useState('all');
+  const [sort, setSort]       = useState('default');
+  const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    const done = { c:false, p:false, cfg:false };
+    const check = () => { if (done.c && done.p && done.cfg) setReady(true); };
+    const cRef = window.db.ref('cats');
+    cRef.on('value', s => { const v=s.val(); const d=v?Object.entries(v).map(([id,d])=>({id,...d})):[];  setCats(d); lsSet('mc_cats',d); done.c=true; check(); });
+    const pRef = window.db.ref('prods');
+    pRef.on('value', s => { const v=s.val(); const d=v?Object.entries(v).map(([id,d])=>({id,...d})):[];  setProds(d); lsSet('mc_prods',d); done.p=true; check(); });
+    const cfgRef = window.db.ref('cfg');
+    cfgRef.on('value', s => { const v=s.val(); if(v){ setSettings(v); lsSet('mc_cfg',v); } done.cfg=true; check(); });
+    return () => { cRef.off(); pRef.off(); cfgRef.off(); };
+  }, []);
+
+  const published = prods.filter(p => p.published);
+  let filtered = activeCat==='all' ? published : published.filter(p => p.categoryId===activeCat);
+  if (sort==='asc')  filtered = [...filtered].sort((a,b)=>Number(a.price)-Number(b.price));
+  if (sort==='desc') filtered = [...filtered].sort((a,b)=>Number(b.price)-Number(a.price));
+  const activeCats = cats.filter(c => published.some(p => p.categoryId===c.id));
+
+  return h('div', null,
+    h('header', { className:'site-header' },
+      h('a', { className:'site-logo', href:'#' },
+        'Moon ', h('em', null, 'Atölye'), h('span', null, 'El Sanatları')
+      )
+    ),
+    h('div', { style:{ borderBottom:'1px solid var(--border)' } },
+      h('div', { className:'hero' },
+        h('div', { className:'hero-text' },
+          h('h1', null, 'El ile ', h('em',null,'dokunulmuş,'), h('br'), 'kalpten gelen', h('br'), 'eserler.'),
+          h('p', null, 'Her ürün, geleneksel Türk el sanatlarının ruhunu modern estetiğe taşıyan, özenle üretilmiş özgün bir çalışmadır.')
+        ),
+        h('div', { className:'hero-visual' },
+          h('div', { className:'hero-pattern' },
+            h('div', { className:'hero-pattern-label' }, 'Moon Atölye'),
+            h('div', { className:'hero-pattern-sub' }, 'El Sanatları — Handmade')
+          )
+        )
+      )
+    ),
+    h('div', { className:'filter-bar' },
+      h('div', { className:'filter-cats' },
+        h('button', { className:`cat-pill${activeCat==='all'?' active':''}`, onClick:()=>setActiveCat('all') }, 'Tümü'),
+        ...activeCats.map(c => h('button', { key:c.id, className:`cat-pill${activeCat===c.id?' active':''}`, onClick:()=>setActiveCat(c.id) }, c.name))
+      ),
+      h('div', { className:'filter-sort' },
+        h('select', { value:sort, onChange:e=>setSort(e.target.value) },
+          h('option', { value:'default' }, 'Varsayılan Sıra'),
+          h('option', { value:'asc' }, 'Fiyat: Artan'),
+          h('option', { value:'desc' }, 'Fiyat: Azalan')
+        )
+      )
+    ),
+    h('div', { className:'shop-section' },
+      !ready
+        ? h('div', { className:'loading-wrap' }, h('div',{className:'spinner'}), h('p',null,'Yükleniyor…'))
+        : h('div', null,
+            h('p', { className:'product-count' }, filtered.length + ' eser'),
+            h('div', { className:'product-grid' },
+              filtered.length === 0
+                ? h('div', { className:'empty-state' }, h('h3',null,'Henüz ürün yok.'), h('p',null,'Yakında yeni eserler burada olacak.'))
+                : filtered.map(p => {
+                    const cat = cats.find(c=>c.id===p.categoryId);
+                    const hasImg = p.images && p.images.length > 0;
+                    return h('article', { key:p.id, className:'p-card', onClick:()=>setSelected(p) },
+                      h('div', { className:'p-card-img' },
+                        hasImg
+                          ? h('img', { src:p.images[0], alt:p.name })
+                          : h(PhImg, { id:p.id, name:p.name })
+                      ),
+                      h('div', { className:'p-card-body' },
+                        cat && h('div', { className:'p-card-cat' }, cat.name),
+                        h('h3', { className:'p-card-name' }, p.name),
+                        h('div', { className:'p-card-price' }, Number(p.price).toLocaleString('tr-TR') + ' ₺'),
+                        h('div', { className:'p-card-action' }, 'İncele ', h('span',null,'→'))
+                      )
+                    );
+                  })
+            )
+          )
+    ),
+    h('footer', { className:'site-footer' },
+      h('strong', null, 'Moon Atölye'),
+      h('span', null, 'El yapımı, özenle üretilmiş')
+    ),
+    selected && h(ProductModal, { product:selected, categories:cats, whatsapp:settings.whatsapp, onClose:()=>setSelected(null) })
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(h(App, null));
+</script>
+</body>
+</html>
